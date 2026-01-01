@@ -1,0 +1,1360 @@
+    
+<!DOCTYPE html>
+<html lang="en" class="dark"> <!-- Default to dark mode -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenTask - Modern To-Do App</title>
+    
+    <!-- Tailwind CSS CDN (with forms plugin) -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Enable dark mode using a class
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        'brand-primary': {
+                            light: '#6D28D9', // purple-700
+                            DEFAULT: '#5B21B6', // purple-800
+                            dark: '#4C1D95'  // purple-900
+                        },
+                        'brand-secondary': {
+                            light: '#3B82F6', // blue-500
+                            DEFAULT: '#2563EB', // blue-600
+                            dark: '#1D4ED8'  // blue-700
+                        },
+                        'glass-light': 'rgba(255, 255, 255, 0.6)',
+                        'glass-dark': 'rgba(31, 41, 55, 0.6)', // gray-800 with alpha
+                    },
+                    backdropBlur: {
+                        'xl': '24px',
+                    },
+                    boxShadow: {
+                        'card': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'card-dark': '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)'
+                    },
+                    keyframes: {
+                        'fade-in': {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        'toast-in': {
+                            '0%': { opacity: '0', transform: 'translateX(100%)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        },
+                        'toast-out': {
+                            '0%': { opacity: '1', transform: 'translateX(0)' },
+                            '100%': { opacity: '0', transform: 'translateX(100%)' },
+                        },
+                        'progress': {
+                            '0%': { width: '0%' },
+                            '100%': { width: '100%' },
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fade-in 0.3s ease-out forwards',
+                        'toast-in': 'toast-in 0.5s ease-out forwards',
+                        'toast-out': 'toast-out 0.5s ease-in forwards',
+                        'progress': 'progress 3s linear forwards'
+                    }
+                },
+            },
+        }
+    </script>
+
+    <!-- Custom Styles -->
+    <style>
+        /* Custom scrollbar for a modern look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4C1D95; /* purple-900 */
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #a78bfa; /* violet-400 */
+        }
+
+        /* Glassmorphism utility class */
+        .glass {
+            @apply bg-glass-light dark:bg-glass-dark backdrop-blur-xl border border-white/20;
+        }
+
+        /* Custom checkbox styles */
+        .task-checkbox {
+            @apply appearance-none w-6 h-6 rounded-full border-2 border-gray-400 dark:border-gray-500 cursor-pointer transition-all duration-200;
+            @apply flex-shrink-0 relative;
+        }
+        .task-checkbox:checked {
+            @apply bg-brand-primary border-brand-primary;
+        }
+        /* Custom checkmark */
+        .task-checkbox:checked::after {
+            content: '\f00c'; /* Font Awesome check icon */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            @apply text-white text-sm absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
+        }
+
+        /* Strikethrough for completed tasks */
+        .task-completed .task-title {
+            @apply line-through text-gray-500 dark:text-gray-400 opacity-70;
+        }
+        
+        /* Animation delay for staggered list items */
+        .task-item {
+            animation: fade-in 0.5s ease-out forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body class="font-sans bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+
+    <!-- Background Gradient -->
+    <div class="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-gray-900 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#374151_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    <div class="absolute top-0 left-0 -z-10 w-full h-96 bg-gradient-to-br from-brand-primary/50 via-brand-secondary/30 to-transparent dark:from-brand-primary/80 dark:via-brand-secondary/50 dark:to-transparent blur-3xl opacity-50 dark:opacity-40"></div>
+
+    <!-- Main Container -->
+    <div class="container mx-auto max-w-4xl p-4 md:p-8">
+
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-check-double text-3xl text-brand-primary dark:text-brand-secondary-light"></i>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-white">ZenTask</h1>
+            </div>
+            <button id="theme-toggle" class="glass text-lg w-10 h-10 rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-all">
+                <i class="fas fa-sun text-yellow-500 block dark:hidden"></i>
+                <i class="fas fa-moon text-brand-secondary-light hidden dark:block"></i>
+            </button>
+        </header>
+
+        <main>
+            <!-- Dashboard Stats -->
+            <section id="dashboard" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div class="glass p-4 rounded-xl shadow-card dark:shadow-card-dark flex items-center gap-4">
+                    <i class="fas fa-layer-group text-2xl text-brand-primary dark:text-brand-primary-light"></i>
+                    <div>
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Total Tasks</span>
+                        <p id="total-tasks" class="text-2xl font-semibold">0</p>
+                    </div>
+                </div>
+                <div class="glass p-4 rounded-xl shadow-card dark:shadow-card-dark flex items-center gap-4">
+                    <i class="fas fa-hourglass-half text-2xl text-yellow-500"></i>
+                    <div>
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Pending</span>
+                        <p id="pending-tasks" class="text-2xl font-semibold">0</p>
+                    </div>
+                </div>
+                <div class="glass p-4 rounded-xl shadow-card dark:shadow-card-dark flex items-center gap-4">
+                    <i class="fas fa-check-circle text-2xl text-green-500"></i>
+                    <div>
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Completed</span>
+                        <p id="completed-tasks" class="text-2xl font-semibold">0</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Progress Bar -->
+            <section class="mb-6">
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-gradient-to-r from-brand-secondary to-brand-primary h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </section>
+
+            <!-- Controls: Add, Filter, Sort, Search -->
+            <section class="mb-6 space-y-4 md:space-y-0 md:flex md:items-center md:justify-between">
+                <!-- Filters -->
+                <div id="filter-group" class="glass p-1.5 rounded-full flex items-center space-x-1 shadow-inner w-full md:w-auto justify-center">
+                    <button data-filter="all" class="filter-btn active-filter px-4 py-2 rounded-full text-sm font-medium transition-all">All</button>
+                    <button data-filter="active" class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all">Active</button>
+                    <button data-filter="completed" class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all">Completed</button>
+                </div>
+                
+                <div class="flex items-center gap-4 w-full md:w-auto">
+                    <!-- Sort Dropdown -->
+                    <div class="relative glass rounded-lg shadow-sm">
+                        <label for="sort-select" class="sr-only">Sort by</label>
+                        <select id="sort-select" class="w-full md:w-auto bg-transparent border-none rounded-lg py-2.5 pl-3 pr-10 text-sm font-medium focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-secondary-light">
+                            <option value="date_desc">Sort by: Date (Newest)</option>
+                            <option value="date_asc">Sort by: Date (Oldest)</option>
+                            <option value="priority">Sort by: Priority</option>
+                            <option value="status">Sort by: Status</option>
+                        </select>
+                        <i class="fas fa-chevron-down text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    </div>
+
+                    <!-- Add Task Button -->
+                    <button id="add-task-btn" class="bg-brand-primary hover:bg-brand-primary-dark dark:bg-brand-secondary dark:hover:bg-brand-secondary-light text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        <span class="hidden sm:inline">Add Task</span>
+                    </button>
+                </div>
+            </section>
+            
+            <!-- Search Bar -->
+            <section class="mb-6">
+                <div class="relative">
+                    <input type="text" id="search-bar" placeholder="Search tasks by title or description..." class="w-full glass pl-10 pr-4 py-3 rounded-lg shadow-sm focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-secondary-light border-none">
+                    <i class="fas fa-search text-gray-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                </div>
+            </section>
+
+            <!-- Task List -->
+            <section>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Your Tasks</h2>
+                    <button id="clear-completed-btn" class="text-sm text-brand-secondary hover:text-brand-secondary-dark dark:text-brand-secondary-light dark:hover:text-blue-300 font-medium transition-all hidden">
+                        <i class="fas fa-trash-alt mr-1"></i> Clear Completed
+                    </button>
+                </div>
+                
+                <!-- Task List Container -->
+                <div id="task-list" class="space-y-4">
+                    <!-- Tasks will be injected here by JavaScript -->
+                    <!-- Loading Spinner -->
+                    <div id="loading-spinner" class="text-center py-10">
+                         <i class="fas fa-spinner fa-spin text-4xl text-brand-primary"></i>
+                         <p class="mt-2 text-gray-500">Loading tasks...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center mt-12 text-gray-500 dark:text-gray-400 text-sm">
+            <p>Made By Aryan Virani and Built with <i class="fas fa-heart text-red-500"></i> using Flask & Tailwind CSS.</p>
+            <p>&copy; 2025 ZenTask. All rights reserved.</p>
+        </footer>
+
+    </div> <!-- End Main Container -->
+
+    <!-- Add/Edit Task Modal -->
+    <div id="task-modal" class="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4 z-40 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div id="modal-content" class="glass w-full max-w-lg rounded-2xl shadow-xl p-6 relative transition-all duration-300 transform scale-95">
+            <!-- Close Button -->
+            <button id="modal-close-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            
+            <h2 id="modal-title" class="text-2xl font-bold mb-6">Add New Task</h2>
+            
+            <form id="task-form">
+                <!-- Hidden input for task ID (used for editing) -->
+                <input type="hidden" id="task-id">
+                
+                <div class="mb-4">
+                    <label for="task-title" class="block text-sm font-medium mb-1">Title <span class="text-red-500">*</span></label>
+                    <input type="text" id="task-title" class="w-full bg-white/50 dark:bg-gray-900/50 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-secondary-light border-1" required>
+                    <p id="title-error" class="text-red-500 text-xs mt-1 hidden">Title is required.</p>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="task-description" class="block text-sm font-medium mb-1">Description (Optional)</label>
+                    <textarea id="task-description" rows="3" class="w-full bg-white/50 dark:bg-gray-900/50 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-secondary-light border-1"></textarea>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="task-priority" class="block text-sm font-medium mb-1">Priority</label>
+                    <select id="task-priority" class="w-full bg-white/50 dark:bg-gray-900/50 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-secondary-light border-1">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" id="modal-submit-btn" class="bg-brand-primary hover:bg-brand-primary-dark dark:bg-brand-secondary dark:hover:bg-brand-secondary-light text-white font-semibold py-2.5 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                        Save Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Subtask Breakdown Modal (Gemini Feature) -->
+    <div id="breakdown-modal" class="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4 z-40 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div id="breakdown-modal-content" class="glass w-full max-w-xl rounded-2xl shadow-xl p-6 relative transition-all duration-300 transform scale-95">
+            <!-- Close Button -->
+            <button id="breakdown-modal-close-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            
+            <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                ✨ Task Breakdown Suggestions
+            </h2>
+            <p id="breakdown-task-title" class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-4 truncate"></p>
+
+            <!-- Loading State -->
+            <div id="breakdown-loading" class="text-center py-10 hidden">
+                 <i class="fas fa-spinner fa-spin text-4xl text-brand-primary"></i>
+                 <p class="mt-2 text-gray-500">Asking Gemini to break down your task...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="breakdown-error" class="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 p-4 rounded-lg hidden">
+                <p class="font-semibold">Generation Failed:</p>
+                <p id="breakdown-error-message" class="text-sm"></p>
+            </div>
+
+            <!-- Subtasks List -->
+            <div id="suggested-subtasks" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+                <!-- Subtasks will be injected here -->
+            </div>
+            
+            <!-- Action Button -->
+            <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button id="add-all-subtasks-btn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50">
+                    Add All Suggested Subtasks
+                </button>
+                <span id="subtask-count" class="text-sm font-medium text-gray-500 dark:text-gray-400">0 subtasks suggested</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Custom Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass w-full max-w-sm rounded-2xl shadow-xl p-6 text-center">
+            <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+            <h3 class="text-lg font-semibold mb-2" id="confirm-title">Are you sure?</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6" id="confirm-message">This action cannot be undone.</p>
+            <div class="flex justify-center gap-4">
+                <button id="confirm-cancel-btn" class="bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-white font-medium py-2 px-6 rounded-lg transition-all">
+                    Cancel
+                </button>
+                <button id="confirm-ok-btn" class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-lg transition-all">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-6 right-6 z-50 space-y-3 w-full max-w-xs">
+        <!-- Toasts will be injected here -->
+    </div>
+
+    <!-- Task Card Template -->
+    <template id="task-card-template">
+        <div class="task-item glass p-4 rounded-xl shadow-card dark:shadow-card-dark flex items-start gap-4 transition-all duration-300 border-l-4">
+            <!-- Checkbox -->
+            <input type="checkbox" class="task-checkbox mt-1">
+            
+            <!-- Task Content -->
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start">
+                    <h3 class="task-title text-lg font-semibold truncate transition-all duration-300">Task Title</h3>
+                    <span class="task-priority-badge hidden sm:inline-block text-xs font-medium px-2.5 py-0.5 rounded-full ml-3 flex-shrink-0"></span>
+                </div>
+                <p class="task-description text-sm text-gray-600 dark:text-gray-300 mt-1 mb-2 break-words">Task Description</p>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span class="task-date mb-2 sm:mb-0">
+                        <i class="fas fa-calendar-alt mr-1"></i>
+                        Created: <span></span>
+                    </span>
+                    <span class="task-priority-badge-mobile sm:hidden text-xs font-medium px-2.5 py-0.5 rounded-full self-start"></span>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-2 items-center ml-2">
+                 <!-- LLM Feature Button -->
+                <button class="breakdown-btn text-gray-500 hover:text-green-500 dark:hover:text-green-400 transition-colors w-8 h-8 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center" title="✨ Break Down Task (Gemini)">
+                    <i class="fas fa-magic"></i>
+                </button>
+                <!-- Edit Button -->
+                <button class="edit-btn text-gray-500 hover:text-brand-secondary dark:hover:text-brand-secondary-light transition-colors w-8 h-8 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+                <!-- Delete Button -->
+                <button class="delete-btn text-gray-500 hover:text-red-500 transition-colors w-8 h-8 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    </template>
+    
+    <!-- Empty State Template -->
+    <template id="empty-state-template">
+         <div id="empty-state" class="text-center py-16 glass rounded-xl shadow-inner animate-fade-in">
+            <i class="fas fa-clipboard-check text-6xl text-gray-400 dark:text-gray-500 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300">All Clear!</h3>
+            <p class="text-gray-500 dark:text-gray-400 mt-2">You have no tasks here. Add one to get started!</p>
+        </div>
+    </template>
+    
+    <!-- Toast Template -->
+    <template id="toast-template">
+        <div class="toast-item bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex items-start gap-3 border-l-4 w-full animate-toast-in">
+            <i class="toast-icon fas fa-check-circle text-2xl"></i>
+            <div>
+                <h4 class="toast-title font-semibold text-gray-900 dark:text-white">Success</h4>
+                <p class="toast-message text-sm text-gray-600 dark:text-gray-300">Task added successfully.</p>
+            </div>
+            <div class="toast-progress h-1 bg-gray-200 dark:bg-gray-700 absolute bottom-0 left-0 right-0">
+                <div class="toast-progress-bar h-1 animate-progress"></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Subtask Template -->
+    <template id="subtask-template">
+        <div class="subtask-item p-3 glass rounded-lg flex justify-between items-center transition-all duration-200 border border-transparent hover:border-brand-secondary/50">
+            <input type="text" class="subtask-title flex-1 bg-transparent border-none p-0 focus:ring-0 focus:outline-none text-gray-900 dark:text-gray-100 text-sm font-medium" readonly>
+            <button class="subtask-toggle-btn text-brand-secondary hover:text-brand-primary dark:text-brand-secondary-light dark:hover:text-brand-primary-light transition-colors ml-4 text-xs font-semibold">
+                <i class="fas fa-plus mr-1"></i> Add
+            </button>
+        </div>
+    </template>
+
+
+    <!-- Core Application JavaScript (as a Module) -->
+    <script type="module">
+        // --- FIREBASE IMPORTS ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- GLOBAL ENVIRONMENT VARIABLES (MANDATORY) ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+
+            // --- FIREBASE INITIALIZATION ---
+            try {
+                // setLogLevel('debug'); // Uncomment for verbose Firestore logging
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Authentication listener
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        isAuthReady = true;
+                    } else {
+                        // Sign in anonymously if no token is available/valid
+                        await signInAnonymously(auth);
+                        // The onAuthStateChanged will fire again with the anonymous user
+                    }
+
+                    if (!userId && auth.currentUser) {
+                        userId = auth.currentUser.uid;
+                        isAuthReady = true;
+                    }
+
+                    if (isAuthReady) {
+                        console.log(`Firebase Initialized. User ID: ${userId}`);
+                        init(); // Call main initialization after auth is ready
+                    }
+                });
+
+                // Use the custom token if provided
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken).catch(error => {
+                        console.error("Custom token sign-in failed, proceeding with anonymous.", error);
+                        signInAnonymously(auth);
+                    });
+                } else {
+                    // Start anonymous sign-in if no custom token exists, or rely on onAuthStateChanged
+                    if (!auth.currentUser) {
+                        signInAnonymously(auth);
+                    }
+                }
+
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+            }
+
+            // --- STATE ---
+            const state = {
+                filter: 'all',
+                sort: 'date_desc',
+                search: '',
+            };
+            
+            // --- DOM Elements ---
+            const dom = {
+                themeToggle: document.getElementById('theme-toggle'),
+                taskList: document.getElementById('task-list'),
+                loadingSpinner: document.getElementById('loading-spinner'),
+                clearCompletedBtn: document.getElementById('clear-completed-btn'),
+                
+                // Dashboard
+                totalTasksEl: document.getElementById('total-tasks'),
+                pendingTasksEl: document.getElementById('pending-tasks'),
+                completedTasksEl: document.getElementById('completed-tasks'),
+                progressBar: document.getElementById('progress-bar'),
+
+                // Controls
+                addTaskBtn: document.getElementById('add-task-btn'),
+                filterGroup: document.getElementById('filter-group'),
+                sortSelect: document.getElementById('sort-select'),
+                searchBar: document.getElementById('search-bar'),
+
+                // Modals (Add/Edit)
+                taskModal: document.getElementById('task-modal'),
+                modalContent: document.getElementById('modal-content'),
+                modalCloseBtn: document.getElementById('modal-close-btn'),
+                modalTitle: document.getElementById('modal-title'),
+                modalSubmitBtn: document.getElementById('modal-submit-btn'),
+                taskForm: document.getElementById('task-form'),
+                taskIdInput: document.getElementById('task-id'),
+                taskTitleInput: document.getElementById('task-title'),
+                taskDescriptionInput: document.getElementById('task-description'),
+                taskPriorityInput: document.getElementById('task-priority'),
+                titleError: document.getElementById('title-error'),
+                
+                // Confirm Modal
+                confirmModal: document.getElementById('confirm-modal'),
+                confirmTitle: document.getElementById('confirm-title'),
+                confirmMessage: document.getElementById('confirm-message'),
+                confirmOkBtn: document.getElementById('confirm-ok-btn'),
+                confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
+
+                // Breakdown Modal (Gemini Feature)
+                breakdownModal: document.getElementById('breakdown-modal'),
+                breakdownModalCloseBtn: document.getElementById('breakdown-modal-close-btn'),
+                breakdownTaskTitle: document.getElementById('breakdown-task-title'),
+                breakdownLoading: document.getElementById('breakdown-loading'),
+                breakdownError: document.getElementById('breakdown-error'),
+                breakdownErrorMessage: document.getElementById('breakdown-error-message'),
+                suggestedSubtasks: document.getElementById('suggested-subtasks'),
+                addAllSubtasksBtn: document.getElementById('add-all-subtasks-btn'),
+                subtaskCount: document.getElementById('subtask-count'),
+
+
+                // Templates
+                taskCardTemplate: document.getElementById('task-card-template'),
+                emptyStateTemplate: document.getElementById('empty-state-template'),
+                toastTemplate: document.getElementById('toast-template'),
+                toastContainer: document.getElementById('toast-container'),
+                subtaskTemplate: document.getElementById('subtask-template'),
+            };
+
+            // --- HELPER: EXPONENTIAL BACKOFF FOR API CALLS ---
+            async function fetchWithBackoff(url, options, retries = 5, delay = 1000) {
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        const response = await fetch(url, options);
+                        if (response.ok) {
+                            return response;
+                        } else if (response.status === 429 || response.status >= 500) {
+                            // Too Many Requests or Server Error - retry
+                            if (i < retries - 1) {
+                                await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+                                continue;
+                            }
+                        }
+                        // For other client errors (4xx), break and throw
+                        const errorData = await response.json().catch(() => ({ error: `HTTP Error ${response.status}` }));
+                        throw new Error(errorData.error || `HTTP Error ${response.status}`);
+                    } catch (error) {
+                        if (i === retries - 1) {
+                            throw error;
+                        }
+                    }
+                }
+            }
+            
+            // --- CONFIRMATION MODAL ---
+            let confirmResolve = null;
+            
+            /**
+             * Shows a custom confirmation dialog.
+             * @param {string} title - The title of the confirmation.
+             * @param {string} message - The message to display.
+             * @param {string} okText - The text for the confirmation button (e.g., "Delete").
+             * @returns {Promise<boolean>} - Resolves true if confirmed, false if canceled.
+             */
+            function showConfirmation(title, message, okText = 'OK') {
+                return new Promise((resolve) => {
+                    confirmResolve = resolve;
+                    dom.confirmTitle.textContent = title;
+                    dom.confirmMessage.textContent = message;
+                    dom.confirmOkBtn.textContent = okText;
+                    
+                    dom.confirmModal.classList.remove('opacity-0', 'pointer-events-none');
+                });
+            }
+            
+            function hideConfirmation() {
+                dom.confirmModal.classList.add('opacity-0', 'pointer-events-none');
+                if (confirmResolve) {
+                    confirmResolve(false); // Resolve as false if canceled
+                    confirmResolve = null;
+                }
+            }
+            
+            dom.confirmOkBtn.addEventListener('click', () => {
+                dom.confirmModal.classList.add('opacity-0', 'pointer-events-none');
+                if (confirmResolve) {
+                    confirmResolve(true);
+                    confirmResolve = null;
+                }
+            });
+            dom.confirmCancelBtn.addEventListener('click', hideConfirmation);
+
+            
+            // --- TOAST NOTIFICATIONS ---
+            /**
+             * @param {string} message - The message to display.
+             * @param {'success' | 'error' | 'info'} type - The type of toast.
+             * @param {number} duration - How long the toast should stay (in ms).
+             */
+            function showToast(message, type = 'success', duration = 3000) {
+                const toastClone = dom.toastTemplate.content.cloneNode(true);
+                const toastItem = toastClone.querySelector('.toast-item');
+                const toastIcon = toastClone.querySelector('.toast-icon');
+                const toastTitle = toastClone.querySelector('.toast-title');
+                const toastMessage = toastClone.querySelector('.toast-message');
+                const toastProgressBar = toastClone.querySelector('.toast-progress-bar');
+                
+                toastMessage.textContent = message;
+                
+                // Reset classes
+                toastIcon.classList.remove('fa-check-circle', 'fa-times-circle', 'fa-info-circle', 'text-green-500', 'text-red-500', 'text-blue-500');
+                toastItem.classList.remove('border-green-500', 'border-red-500', 'border-blue-500');
+                toastProgressBar.classList.remove('bg-green-500', 'bg-red-500', 'bg-blue-500');
+
+                switch (type) {
+                    case 'error':
+                        toastTitle.textContent = 'Error';
+                        toastIcon.classList.add('fa-times-circle', 'text-red-500');
+                        toastItem.classList.add('border-red-500');
+                        toastProgressBar.classList.add('bg-red-500');
+                        break;
+                    case 'info':
+                        toastTitle.textContent = 'Info';
+                        toastIcon.classList.add('fa-info-circle', 'text-blue-500');
+                        toastItem.classList.add('border-blue-500');
+                        toastProgressBar.classList.add('bg-blue-500');
+                        break;
+                    case 'success':
+                    default:
+                        toastTitle.textContent = 'Success';
+                        toastIcon.classList.add('fa-check-circle', 'text-green-500');
+                        toastItem.classList.add('border-green-500');
+                        toastProgressBar.classList.add('bg-green-500');
+                        break;
+                }
+                
+                toastProgressBar.style.animationDuration = `${duration}ms`;
+                dom.toastContainer.appendChild(toastClone);
+                
+                // Self-destruct
+                setTimeout(() => {
+                    toastItem.classList.add('animate-toast-out');
+                    toastItem.addEventListener('animationend', () => {
+                        toastItem.remove();
+                    });
+                }, duration);
+            }
+
+            // --- THEME ---
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+
+            function toggleTheme() {
+                const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            }
+
+            // --- MODAL (Add/Edit) ---
+            function openModal(mode = 'add', task = null) {
+                dom.taskForm.reset();
+                dom.taskIdInput.value = '';
+                dom.titleError.classList.add('hidden');
+                
+                if (mode === 'edit' && task) {
+                    dom.modalTitle.textContent = 'Edit Task';
+                    dom.modalSubmitBtn.textContent = 'Update Task';
+                    dom.taskIdInput.value = task.id;
+                    dom.taskTitleInput.value = task.title;
+                    dom.taskDescriptionInput.value = task.description;
+                    dom.taskPriorityInput.value = task.priority;
+                } else {
+                    dom.modalTitle.textContent = 'Add New Task';
+                    dom.modalSubmitBtn.textContent = 'Save Task';
+                }
+                
+                dom.taskModal.classList.remove('opacity-0', 'pointer-events-none');
+                dom.modalContent.classList.remove('scale-95');
+            }
+
+            function closeModal() {
+                dom.taskModal.classList.add('opacity-0', 'pointer-events-none');
+                dom.modalContent.classList.add('scale-95');
+            }
+            
+            // --- MODAL (Breakdown) ---
+            function openBreakdownModal() {
+                dom.breakdownModal.classList.remove('opacity-0', 'pointer-events-none');
+                dom.breakdownModal.classList.remove('scale-95');
+            }
+
+            function closeBreakdownModal() {
+                dom.breakdownModal.classList.add('opacity-0', 'pointer-events-none');
+                dom.breakdownModal.classList.add('scale-95');
+                dom.suggestedSubtasks.innerHTML = '';
+            }
+
+
+            // --- LLM API INTEGRATION: TASK BREAKDOWN ---
+
+            /**
+             * Calls the Gemini API to get a structured JSON response of subtasks.
+             * @param {string} title - The main task title.
+             * @param {string} description - The main task description.
+             * @returns {Promise<Array<string>>} - An array of suggested subtask titles.
+             */
+            async function generateSubtasks(title, description) {
+                const userPrompt = `Break down the following high-level task into 3 to 7 specific, actionable subtasks. Do not include any introductory or concluding text, only the JSON.
+
+Task Title: "${title}"
+Task Description: "${description || 'None provided.'}"`;
+
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userPrompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "subtasks": {
+                                    type: "ARRAY",
+                                    description: "A list of 3 to 7 actionable subtask titles derived from the main task.",
+                                    items: { type: "STRING" }
+                                }
+                            }
+                        }
+                    },
+                    systemInstruction: {
+                        parts: [{ text: "You are a professional project manager. Your job is to analyze a single task and break it down into a list of specific, next-action subtasks. The output must be a valid JSON object matching the schema." }]
+                    }
+                };
+
+                const options = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                };
+
+                try {
+                    const response = await fetchWithBackoff(apiUrl, options);
+                    const result = await response.json();
+                    
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!text) throw new Error("API returned no text content.");
+
+                    const jsonResult = JSON.parse(text);
+                    if (jsonResult && jsonResult.subtasks && Array.isArray(jsonResult.subtasks)) {
+                        return jsonResult.subtasks;
+                    }
+                    throw new Error("Invalid or missing 'subtasks' array in the structured response.");
+
+                } catch (error) {
+                    console.error("Gemini API Error:", error);
+                    throw new Error(`Could not generate subtasks: ${error.message}`);
+                }
+            }
+
+            /**
+             * Renders the suggested subtasks in the breakdown modal.
+             * @param {Array<string>} subtasks - Array of subtask titles.
+             */
+            function renderSuggestedSubtasks(subtasks) {
+                dom.suggestedSubtasks.innerHTML = '';
+                
+                subtasks.forEach(subtaskTitle => {
+                    const clone = dom.subtaskTemplate.content.cloneNode(true);
+                    const subtaskItem = clone.querySelector('.subtask-item');
+                    const titleInput = clone.querySelector('.subtask-title');
+                    const toggleBtn = clone.querySelector('.subtask-toggle-btn');
+                    
+                    titleInput.value = subtaskTitle;
+                    
+                    // Allow adding individual subtasks
+                    toggleBtn.addEventListener('click', async () => {
+                        await handleAddSingleSubtask(subtaskTitle);
+                        subtaskItem.remove();
+                        // Update count and button status
+                        const currentCount = dom.suggestedSubtasks.children.length - 1;
+                        dom.subtaskCount.textContent = `${currentCount} subtasks suggested`;
+                        dom.addAllSubtasksBtn.disabled = currentCount <= 0;
+                        if (currentCount <= 0) {
+                            closeBreakdownModal();
+                        }
+                    });
+                    
+                    dom.suggestedSubtasks.appendChild(clone);
+                });
+                
+                dom.subtaskCount.textContent = `${subtasks.length} subtasks suggested`;
+                dom.addAllSubtasksBtn.disabled = subtasks.length === 0;
+            }
+
+            /**
+             * Handles the click event for the 'Break Down Task' button.
+             * @param {object} task - The task object to break down.
+             */
+            async function handleBreakdownTask(task) {
+                // Prepare UI
+                dom.breakdownTaskTitle.textContent = task.title;
+                dom.suggestedSubtasks.innerHTML = '';
+                dom.breakdownError.classList.add('hidden');
+                dom.breakdownLoading.classList.remove('hidden');
+                dom.addAllSubtasksBtn.disabled = true;
+                dom.subtaskCount.textContent = '0 subtasks suggested';
+
+                openBreakdownModal();
+
+                try {
+                    // Call local backend which has a simple rule-based fallback
+                    const resp = await fetch('/api/tasks/breakdown', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: task.title, description: task.description })
+                    });
+
+                    if (!resp.ok) {
+                        throw new Error('Failed to generate subtasks from server.');
+                    }
+
+                    const data = await resp.json();
+                    const subtasks = Array.isArray(data.subtasks) ? data.subtasks : [];
+                    if (subtasks.length === 0) {
+                        throw new Error('No subtasks were generated.');
+                    }
+
+                    renderSuggestedSubtasks(subtasks);
+
+                } catch (error) {
+                    dom.breakdownErrorMessage.textContent = error.message;
+                    dom.breakdownError.classList.remove('hidden');
+                    console.error('Task Breakdown Failed:', error);
+                } finally {
+                    dom.breakdownLoading.classList.add('hidden');
+                }
+            }
+            
+            /**
+             * Adds all remaining suggested subtasks to the task list.
+             */
+            async function handleAddAllSubtasks() {
+                const subtaskElements = Array.from(dom.suggestedSubtasks.querySelectorAll('.subtask-title'));
+                const titles = subtaskElements.map(input => input.value);
+                
+                if (titles.length === 0) return;
+                
+                try {
+                    // Send all subtasks to the server (using the existing POST endpoint for simplicity)
+                    const promises = titles.map(title => fetch('/api/tasks', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: title,
+                            description: `Subtask generated by Gemini based on a larger project.`,
+                            priority: 'Low' 
+                        }),
+                    }).then(res => res.json()));
+                    
+                    await Promise.all(promises);
+
+                    showToast(`${titles.length} new subtasks added!`, 'success');
+                    closeBreakdownModal();
+                    fetchTasks();
+                    
+                } catch (error) {
+                    console.error('Error adding all subtasks:', error);
+                    showToast('Failed to add all subtasks. Try again.', 'error');
+                }
+            }
+            
+            /**
+             * Adds a single subtask to the task list.
+             */
+            async function handleAddSingleSubtask(title) {
+                 try {
+                    const response = await fetch('/api/tasks', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: title,
+                            description: `Subtask generated by Gemini based on a larger project.`,
+                            priority: 'Medium' 
+                        }),
+                    });
+                    
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Failed to add subtask.');
+                    }
+                    
+                    showToast(`Subtask "${title}" added.`, 'info');
+                    fetchTasks(); 
+
+                } catch (error) {
+                    console.error('Error adding single subtask:', error);
+                    showToast(error.message, 'error');
+                }
+            }
+
+            // --- API Calls (Using Flask Mock Endpoints) ---
+            
+            /**
+             * Fetches tasks from the server and re-renders the list.
+             */
+            async function fetchTasks() {
+                showLoading(true);
+                try {
+                    const params = new URLSearchParams({
+                        filter: state.filter,
+                        sort: state.sort,
+                        search: state.search,
+                    });
+                    
+                    // Use standard fetch here, assuming the Flask backend handles retries/errors gracefully
+                    const response = await fetch(`/api/tasks?${params.toString()}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    renderTasks(data.tasks);
+                    updateDashboard(data.counts);
+                    
+                } catch (error) {
+                    console.error('Error fetching tasks:', error);
+                    showToast('Failed to load tasks. Please try again.', 'error');
+                    renderTasks([]); // Render empty state on error
+                } finally {
+                    showLoading(false);
+                }
+            }
+
+            /**
+             * Handles form submission for adding or editing a task.
+             */
+            async function handleFormSubmit(e) {
+                e.preventDefault();
+                
+                const title = dom.taskTitleInput.value.trim();
+                if (!title) {
+                    dom.titleError.classList.remove('hidden');
+                    return;
+                } else {
+                    dom.titleError.classList.add('hidden');
+                }
+
+                const id = dom.taskIdInput.value;
+                const isEditing = !!id;
+                
+                const taskData = {
+                    title: title,
+                    description: dom.taskDescriptionInput.value.trim(),
+                    priority: dom.taskPriorityInput.value,
+                };
+
+                const url = isEditing ? `/api/task/${id}` : '/api/tasks';
+                const method = isEditing ? 'PUT' : 'POST';
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(taskData),
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Failed to save task.');
+                    }
+                    
+                    showToast(isEditing ? 'Task updated successfully!' : 'Task added successfully!', 'success');
+                    closeModal();
+                    fetchTasks(); // Refresh the list
+                    
+                } catch (error) {
+                    console.error('Error saving task:', error);
+                    showToast(error.message, 'error');
+                }
+            }
+            
+            /**
+             * Toggles the completion status of a task.
+             */
+            async function handleToggleTask(id, isCompleted) {
+                 try {
+                    const response = await fetch(`/api/task/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ completed: isCompleted }),
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Failed to update status.');
+                    }
+                    
+                    showToast(isCompleted ? 'Task marked as complete!' : 'Task marked as active.', 'info');
+                    fetchTasks(); // Refresh list and counts
+                    
+                 } catch (error) {
+                    console.error('Error toggling task:', error);
+                    showToast(error.message, 'error');
+                 }
+            }
+
+            /**
+             * Deletes a single task after confirmation.
+             */
+            async function handleDeleteTask(id) {
+                const confirmed = await showConfirmation(
+                    'Delete Task?',
+                    'This task will be permanently deleted.',
+                    'Delete'
+                );
+                
+                if (!confirmed) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/task/${id}`, {
+                        method: 'DELETE',
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Failed to delete task.');
+                    }
+                    
+                    showToast('Task deleted successfully.', 'success');
+                    fetchTasks(); // Refresh list
+                    
+                } catch (error) {
+                    console.error('Error deleting task:', error);
+                    showToast(error.message, 'error');
+                }
+            }
+
+            /**
+             * Clears all completed tasks after confirmation.
+             */
+            async function handleClearCompleted() {
+                const confirmed = await showConfirmation(
+                    'Clear Completed Tasks?',
+                    'All completed tasks will be permanently deleted.',
+                    'Clear All'
+                );
+                
+                if (!confirmed) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/tasks/clear-completed', {
+                        method: 'DELETE',
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Failed to clear tasks.');
+                    }
+                    
+                    showToast(result.message, 'success');
+                    fetchTasks(); // Refresh list
+                    
+                } catch (error) {
+                    console.error('Error clearing tasks:', error);
+                    showToast('Failed to clear completed tasks. Try again.', 'error');
+                }
+            }
+
+            // --- RENDERING ---
+
+            function showLoading(isLoading) {
+                if (isLoading) {
+                    dom.loadingSpinner.classList.remove('hidden');
+                    dom.taskList.innerHTML = ''; // Clear previous tasks
+                } else {
+                    dom.loadingSpinner.classList.add('hidden');
+                }
+            }
+            
+            function getPriorityStyles(priority) {
+                switch (priority) {
+                    case 'High':
+                        return {
+                            border: 'border-red-500',
+                            badge: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+                            text: 'High'
+                        };
+                    case 'Medium':
+                        return {
+                            border: 'border-yellow-500',
+                            badge: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                            text: 'Medium'
+                        };
+                    case 'Low':
+                    default:
+                        return {
+                            border: 'border-green-500',
+                            badge: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                            text: 'Low'
+                        };
+                }
+            }
+            
+            /**
+             * Renders the list of tasks into the DOM.
+             * @param {Array} tasks - An array of task objects.
+             */
+            function renderTasks(tasks) {
+                dom.taskList.innerHTML = ''; // Clear existing list
+                
+                if (tasks.length === 0) {
+                    const emptyState = dom.emptyStateTemplate.content.cloneNode(true);
+                    dom.taskList.appendChild(emptyState);
+                    return;
+                }
+                
+                tasks.forEach((task, index) => {
+                    const card = dom.taskCardTemplate.content.cloneNode(true);
+                    const taskItem = card.querySelector('.task-item');
+                    const checkbox = card.querySelector('.task-checkbox');
+                    const title = card.querySelector('.task-title');
+                    const description = card.querySelector('.task-description');
+                    const date = card.querySelector('.task-date span');
+                    const priorityBadge = card.querySelector('.task-priority-badge');
+                    const priorityBadgeMobile = card.querySelector('.task-priority-badge-mobile');
+                    const breakdownBtn = card.querySelector('.breakdown-btn');
+                    const editBtn = card.querySelector('.edit-btn');
+                    const deleteBtn = card.querySelector('.delete-btn');
+                    
+                    // Staggered animation
+                    taskItem.style.animationDelay = `${index * 50}ms`;
+                    
+                    // Set data
+                    taskItem.dataset.id = task.id;
+                    title.textContent = task.title;
+                    description.textContent = task.description;
+                    date.textContent = new Date(task.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'short', day: 'numeric'
+                    });
+                    
+                    // Show description only if it exists
+                    description.classList.toggle('hidden', !task.description);
+                    
+                    // Priority styles
+                    const priorityStyles = getPriorityStyles(task.priority);
+                    taskItem.classList.add(priorityStyles.border);
+                    
+                    [priorityBadge, priorityBadgeMobile].forEach(badge => {
+                        badge.textContent = priorityStyles.text;
+                        badge.className = `${badge.className} ${priorityStyles.badge}`;
+                    });
+
+                    // Completion status
+                    if (task.completed) {
+                        taskItem.classList.add('task-completed', 'opacity-70');
+                        checkbox.checked = true;
+                    }
+                    
+                    // --- Attach Event Listeners to the new card ---
+                    
+                    // Toggle completion
+                    checkbox.addEventListener('change', () => {
+                        handleToggleTask(task.id, checkbox.checked);
+                    });
+                    
+                    // Edit
+                    editBtn.addEventListener('click', () => {
+                        openModal('edit', task);
+                    });
+                    
+                    // Delete
+                    deleteBtn.addEventListener('click', () => {
+                        handleDeleteTask(task.id);
+                    });
+                    
+                    // Breakdown (Gemini Feature)
+                    breakdownBtn.addEventListener('click', () => {
+                        handleBreakdownTask(task);
+                    });
+                    
+                    dom.taskList.appendChild(card);
+                });
+            }
+
+            /**
+             * Updates the dashboard stats and progress bar.
+             * @param {object} counts - { total, pending, completed }
+             */
+            function updateDashboard(counts) {
+                dom.totalTasksEl.textContent = counts.total;
+                dom.pendingTasksEl.textContent = counts.pending;
+                dom.completedTasksEl.textContent = counts.completed;
+                
+                // Update progress bar
+                const percentage = (counts.total === 0) ? 0 : Math.round((counts.completed / counts.total) * 100);
+                dom.progressBar.style.width = `${percentage}%`;
+                
+                // Show/Hide "Clear Completed" button
+                dom.clearCompletedBtn.classList.toggle('hidden', counts.completed === 0);
+            }
+            
+            
+            // --- EVENT LISTENERS ---
+            
+            // Theme
+            dom.themeToggle.addEventListener('click', toggleTheme);
+            
+            // Modals (Add/Edit)
+            dom.addTaskBtn.addEventListener('click', () => openModal('add'));
+            dom.modalCloseBtn.addEventListener('click', closeModal);
+            dom.taskModal.addEventListener('click', (e) => {
+                // Close modal if clicking on the backdrop
+                if (e.target === dom.taskModal) {
+                    closeModal();
+                }
+            });
+            dom.taskForm.addEventListener('submit', handleFormSubmit);
+
+            // Modals (Breakdown)
+            dom.breakdownModalCloseBtn.addEventListener('click', closeBreakdownModal);
+            dom.breakdownModal.addEventListener('click', (e) => {
+                // Close modal if clicking on the backdrop
+                if (e.target === dom.breakdownModal) {
+                    closeBreakdownModal();
+                }
+            });
+            dom.addAllSubtasksBtn.addEventListener('click', handleAddAllSubtasks);
+
+
+            // Controls
+            dom.clearCompletedBtn.addEventListener('click', handleClearCompleted);
+
+            // Filters
+            dom.filterGroup.addEventListener('click', (e) => {
+                const target = e.target.closest('.filter-btn');
+                if (!target) return;
+                
+                // Update active button style
+                dom.filterGroup.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
+                target.classList.add('active-filter');
+                
+                // Update state and fetch
+                state.filter = target.dataset.filter;
+                fetchTasks();
+            });
+            
+            // Sort
+            dom.sortSelect.addEventListener('change', (e) => {
+                state.sort = e.target.value;
+                fetchTasks();
+            });
+
+            // Search (with debounce)
+            let searchTimeout;
+            dom.searchBar.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    state.search = e.target.value;
+                    fetchTasks();
+                }, 300); // 300ms debounce
+            });
+
+            // --- INITIALIZATION ---
+            function init() {
+                // Load theme from localStorage
+                const savedTheme = localStorage.getItem('theme') || 'dark'; // Default to dark
+                applyTheme(savedTheme);
+                
+                // Add active styles for filter buttons
+                const activeFilterCSS = `
+                    .active-filter {
+                        background-color: var(--tw-colors-brand-primary);
+                        color: white;
+                        box-shadow: var(--tw-shadow-md);
+                    }
+                    .dark .active-filter {
+                        background-color: var(--tw-colors-brand-secondary);
+                    }
+                    .filter-btn:not(.active-filter) {
+                        color: var(--tw-colors-gray-600);
+                        background-color: transparent;
+                    }
+                    .dark .filter-btn:not(.active-filter) {
+                        color: var(--tw-colors-gray-300);
+                    }
+                    .filter-btn:not(.active-filter):hover {
+                        @apply bg-gray-200 dark:bg-gray-700;
+                    }
+                `;
+                
+                const styleSheet = document.createElement("style");
+                styleSheet.type = "text/css";
+                styleSheet.innerText = activeFilterCSS;
+                document.head.appendChild(styleSheet);
+                
+                // Set initial active filter in UI
+                dom.filterGroup.querySelector(`[data-filter="${state.filter}"]`).classList.add('active-filter');
+
+                // Initial fetch
+                fetchTasks();
+            }
+
+            // Note: init() is now called by the Firebase onAuthStateChanged listener to ensure userId is ready.
+        });
+    </script>
+
+</body>
+</html>
